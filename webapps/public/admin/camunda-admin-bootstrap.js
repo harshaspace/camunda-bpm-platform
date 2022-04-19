@@ -20,8 +20,8 @@ window._import = path => {
   return import(path);
 };
 
-// camunda-welcome-bootstrap is copied as-is, so we have to inline everything
-const baseImportPath = document.querySelector('base').href + '../';
+// camunda-admin-bootstrap is copied as-is, so we have to inline everything
+const baseImportPath = document.querySelector('base').href;
 
 const loadConfig = (async function() {
   // eslint-disable-next-line
@@ -32,46 +32,62 @@ const loadConfig = (async function() {
       )
     ).default || {};
 
-  window.camWelcomeConf = config;
+  window.camAdminConf = config;
   return config;
 })();
 
 window.__define(
-  'camunda-welcome-bootstrap',
-  ['./scripts/camunda-welcome-ui'],
+  'camunda-admin-bootstrap',
+  ['./camunda-admin-ui'],
   function() {
     'use strict';
+    const bootstrap = function(config) {
 
-    const bootstrap = config => {
-      var camundaWelcomeUi = window.CamundaWelcomeUi;
+      var camundaAdminUi = window['camunda/app/admin/camunda-admin-ui'];
 
-      requirejs.config({
+      window.__requirejs.config({
         baseUrl: '../../../lib'
       });
 
       var requirePackages = window;
-      camundaWelcomeUi.exposePackages(requirePackages);
+      camundaAdminUi.exposePackages(requirePackages);
 
       window.define = window.__define;
       window.require = window.__require;
 
-      requirejs(['globalize'], function(globalize) {
+      define('globalize', [], function() {
+        return function(r, m, p) {
+          for(var i = 0; i < m.length; i++) {
+            (function(i) {
+              define(m[i],function(){return p[m[i]];});
+            })(i);
+          }
+        }
+      });
+
+      window.__requirejs(['globalize'], function(globalize) {
         globalize(
-          requirejs,
-          [
-            'angular',
-            'camunda-commons-ui',
-            'camunda-bpm-sdk-js',
-            'jquery',
-            'angular-data-depend',
-            'moment',
-            'events'
-          ],
+          window.__requirejs,
+          ['angular', 'camunda-commons-ui', 'camunda-bpm-sdk-js', 'jquery'],
           requirePackages
         );
 
         var pluginPackages = window.PLUGIN_PACKAGES || [];
         var pluginDependencies = window.PLUGIN_DEPENDENCIES || [];
+
+        pluginPackages = pluginPackages.filter(
+          el =>
+            el.name === 'admin-plugin-adminPlugins' ||
+            el.name === 'admin-plugin-adminEE' ||
+            el.name.startsWith('admin-plugin-legacy')
+        );
+
+        pluginDependencies = pluginDependencies.filter(
+          el =>
+            el.requirePackageName === 'admin-plugin-adminPlugins' ||
+            el.requirePackageName === 'admin-plugin-adminEE' ||
+            el.requirePackageName.startsWith('admin-plugin-legacy')
+        );
 
         pluginPackages.forEach(function(plugin) {
           var node = document.createElement('link');
@@ -80,9 +96,9 @@ window.__define(
           document.head.appendChild(node);
         });
 
-        requirejs.config({
+        window.__requirejs.config({
           packages: pluginPackages,
-          baseUrl: '../',
+          baseUrl: './',
           paths: {
             ngDefine: '../../lib/ngDefine'
           }
@@ -94,9 +110,9 @@ window.__define(
           })
         );
 
-        requirejs(dependencies, function(angular) {
-          // we now loaded the welcome and the plugins, great
-          // before we start initializing the welcome though (and leave the requirejs context),
+        window.__requirejs(dependencies, function(angular) {
+          // we now loaded admin and the plugins, great
+          // before we start initializing admin though (and leave the requirejs context),
           // lets see if we should load some custom scripts first
 
           if (config && config.csrfCookieName) {
@@ -139,25 +155,25 @@ window.__define(
             });
 
             // configure RequireJS
-            requirejs.config(conf);
+            window.__requirejs.config(conf);
 
             // load the dependencies and bootstrap the AngularJS application
-            requirejs(custom.deps || [], function() {
+            window.__requirejs(custom.deps || [], function() {
               // create a AngularJS module (with possible AngularJS module dependencies)
               // on which the custom scripts can register their
               // directives, controllers, services and all when loaded
-              angular.module('cam.welcome.custom', custom.ngDeps);
+              angular.module('cam.admin.custom', custom.ngDeps);
 
               window.define = undefined;
               window.require = undefined;
 
               // now that we loaded the plugins and the additional modules, we can finally
-              // initialize Welcome
-              camundaWelcomeUi(pluginDependencies);
+              // initialize Admin
+              camundaAdminUi(pluginDependencies);
             });
           } else {
             // for consistency, also create a empty module
-            angular.module('cam.welcome.custom', []);
+            angular.module('cam.admin.custom', []);
 
             // make sure that we are at the end of the require-js callback queue.
             // Why? => the plugins will also execute require(..) which will place new
@@ -169,15 +185,17 @@ window.__define(
             require([], function() {
               window.define = undefined;
               window.require = undefined;
-              camundaWelcomeUi(pluginDependencies);
+              camundaAdminUi(pluginDependencies);
             });
           }
         });
       });
     };
 
-    loadConfig.then(config => bootstrap(config));
+    loadConfig.then(config => {
+      bootstrap(config);
+    });
   }
 );
 
-requirejs(['camunda-welcome-bootstrap'], function() {});
+window.__requirejs(['camunda-admin-bootstrap'], function() {});

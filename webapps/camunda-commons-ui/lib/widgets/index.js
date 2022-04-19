@@ -43,7 +43,7 @@ var angular = require('../../../camunda-bpm-sdk-js/vendor/angular'),
   camShareLink = require('./cam-share-link/cam-share-link'),
   password = require('./password/cam-widget-password');
 
-require('../../vendor/ui-bootstrap-tpls-2.5.0-camunda');
+require('angular-ui-bootstrap');
 
 var widgetModule = angular.module('camunda.common.widgets', [
   filtersModule.name,

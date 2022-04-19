@@ -22,17 +22,11 @@ var events = require('../components/events');
 
 var fs = require('fs');
 
-var deleteModalTemplate = fs.readFileSync(
-  __dirname + '/../templates/delete-modal.html',
-  'utf8'
-);
+var deleteModalTemplate = require('./../templates/delete-modal.html')();
 var deleteModalCtrl = require('./modal-ctrl');
 
 var jobLogModalCtrl = require('./job-log-ctrl');
-var jobLogModalTemplate = fs.readFileSync(
-  __dirname + '/../templates/job-log.html',
-  'utf8'
-);
+var jobLogModalTemplate = require('./../templates/job-log.html')();
 
 module.exports = [
   '$scope',

@@ -20,8 +20,8 @@ window._import = path => {
   return import(path);
 };
 
-//  Camunda-Cockpit-Bootstrap is copied as-is, so we have to inline everything
-const baseImportPath = document.querySelector('base').href + '../';
+// camunda-welcome-bootstrap is copied as-is, so we have to inline everything
+const baseImportPath = document.querySelector('base').href;
 
 const loadConfig = (async function() {
   // eslint-disable-next-line
@@ -32,56 +32,56 @@ const loadConfig = (async function() {
       )
     ).default || {};
 
-  window.camTasklistConf = config;
+  window.camWelcomeConf = config;
   return config;
 })();
 
 window.__define(
-  'camunda-tasklist-bootstrap',
-  ['./scripts/camunda-tasklist-ui'],
+  'camunda-welcome-bootstrap',
+  ['./camunda-welcome-ui'],
   function() {
-    const bootstrap = function(config) {
-      'use strict';
+    'use strict';
 
-      var camundaTasklistUi = window.CamundaTasklistUi;
+    const bootstrap = config => {
+      var camundaWelcomeUi = window['camunda/app/welcome/camunda-welcome-ui'];
 
-      requirejs.config({
+      window.__requirejs.config({
         baseUrl: '../../../lib'
       });
-      var requirePackages = window;
 
-      camundaTasklistUi.exposePackages(requirePackages);
+      var requirePackages = window;
+      camundaWelcomeUi.exposePackages(requirePackages);
 
       window.define = window.__define;
       window.require = window.__require;
 
-      requirejs(['globalize'], function(globalize) {
+      define('globalize', [], function() {
+        return function(r, m, p) {
+          for(var i = 0; i < m.length; i++) {
+            (function(i) {
+              define(m[i],function(){return p[m[i]];});
+            })(i);
+          }
+        }
+      });
+
+      window.__requirejs(['globalize'], function(globalize) {
         globalize(
-          requirejs,
+          window.__requirejs,
           [
             'angular',
             'camunda-commons-ui',
             'camunda-bpm-sdk-js',
             'jquery',
-            'angular-data-depend'
+            'angular-data-depend',
+            'moment',
+            'events'
           ],
           requirePackages
         );
 
         var pluginPackages = window.PLUGIN_PACKAGES || [];
         var pluginDependencies = window.PLUGIN_DEPENDENCIES || [];
-
-        pluginPackages = pluginPackages.filter(
-          el =>
-            el.name === 'tasklist-plugin-tasklistPlugins' ||
-            el.name.startsWith('tasklist-plugin-legacy')
-        );
-
-        pluginDependencies = pluginDependencies.filter(
-          el =>
-            el.requirePackageName === 'tasklist-plugin-tasklistPlugins' ||
-            el.requirePackageName.startsWith('tasklist-plugin-legacy')
-        );
 
         pluginPackages.forEach(function(plugin) {
           var node = document.createElement('link');
@@ -90,9 +90,9 @@ window.__define(
           document.head.appendChild(node);
         });
 
-        requirejs.config({
+        window.__requirejs.config({
           packages: pluginPackages,
-          baseUrl: '../',
+          baseUrl: './',
           paths: {
             ngDefine: '../../lib/ngDefine'
           }
@@ -104,25 +104,21 @@ window.__define(
           })
         );
 
-        requirejs(dependencies, function(angular) {
-          // we now loaded the tasklist and the plugins, great
-          // before we start initializing the tasklist though (and leave the requirejs context),
+        window.__requirejs(dependencies, function(angular) {
+          // we now loaded the welcome and the plugins, great
+          // before we start initializing the welcome though (and leave the requirejs context),
           // lets see if we should load some custom scripts first
 
-          if (window.camTasklistConf && window.camTasklistConf.csrfCookieName) {
+          if (config && config.csrfCookieName) {
             angular.module('cam.commons').config([
               '$httpProvider',
               function($httpProvider) {
-                $httpProvider.defaults.xsrfCookieName =
-                  window.camTasklistConf.csrfCookieName;
+                $httpProvider.defaults.xsrfCookieName = config.csrfCookieName;
               }
             ]);
           }
 
-          if (
-            typeof window.camTasklistConf !== 'undefined' &&
-            window.camTasklistConf.requireJsConfig
-          ) {
+          if (typeof config !== 'undefined' && config.requireJsConfig) {
             var custom = config.requireJsConfig || {};
 
             // copy the relevant RequireJS configuration in a empty object
@@ -153,25 +149,25 @@ window.__define(
             });
 
             // configure RequireJS
-            requirejs.config(conf);
+            window.__requirejs.config(conf);
 
             // load the dependencies and bootstrap the AngularJS application
-            requirejs(custom.deps || [], function() {
+            window.__requirejs(custom.deps || [], function() {
               // create a AngularJS module (with possible AngularJS module dependencies)
               // on which the custom scripts can register their
               // directives, controllers, services and all when loaded
-              angular.module('cam.tasklist.custom', custom.ngDeps);
+              angular.module('cam.welcome.custom', custom.ngDeps);
 
               window.define = undefined;
               window.require = undefined;
 
               // now that we loaded the plugins and the additional modules, we can finally
-              // initialize the tasklist
-              camundaTasklistUi(pluginDependencies);
+              // initialize Welcome
+              camundaWelcomeUi(pluginDependencies);
             });
           } else {
             // for consistency, also create a empty module
-            angular.module('cam.tasklist.custom', []);
+            angular.module('cam.welcome.custom', []);
 
             // make sure that we are at the end of the require-js callback queue.
             // Why? => the plugins will also execute require(..) which will place new
@@ -183,17 +179,15 @@ window.__define(
             require([], function() {
               window.define = undefined;
               window.require = undefined;
-              camundaTasklistUi(pluginDependencies);
+              camundaWelcomeUi(pluginDependencies);
             });
           }
         });
       });
     };
 
-    loadConfig.then(config => {
-      bootstrap(config);
-    });
+    loadConfig.then(config => bootstrap(config));
   }
 );
 
-requirejs(['camunda-tasklist-bootstrap'], function() {});
+window.__requirejs(['camunda-welcome-bootstrap'], function() {});

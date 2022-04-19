@@ -22,13 +22,13 @@ var fs = require('fs');
 var angular = require('../../../../../camunda-bpm-sdk-js/vendor/angular'),
     variablesTableDefinition = require('../cam-widget-variables-table'),
     renderVarTemplateDefinition = require('../cam-render-var-template'),
-    fancyDialogTemplate = fs.readFileSync(__dirname + '/fancy-modal.html', 'utf8'),
+    fancyDialogTemplate = require('./fancy-modal.html'),
     variableDefinition = require('../../variable/cam-widget-variable'),
     clipboardWidget = require('../../clipboard/cam-widget-clipboard'),
     varUtils = require('../../variable/cam-variable-utils'),
     camCommonsUi = require('../../index');
 
-require('../../../../vendor/ui-bootstrap-tpls-2.5.0-camunda');
+require('angular-ui-bootstrap');
 require('angular-translate');
 
 var variableModule = angular.module('variableModule', [

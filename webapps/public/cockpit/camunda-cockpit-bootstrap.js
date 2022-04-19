@@ -21,7 +21,7 @@ window._import = path => {
 };
 
 //  Camunda-Cockpit-Bootstrap is copied as-is, so we have to inline everything
-const baseImportPath = document.querySelector('base').href + '../';
+const baseImportPath = document.querySelector('base').href;
 
 function withSuffix(string, suffix) {
   return !string.endsWith(suffix) ? string + suffix : string;
@@ -47,15 +47,15 @@ const loadConfig = (async function() {
 
 window.__define(
   'camunda-cockpit-bootstrap',
-  ['./scripts/camunda-cockpit-ui'],
+  ['./camunda-cockpit-ui'],
   function() {
     const bootstrap = function(config) {
       'use strict';
 
-      var camundaCockpitUi = window.CamundaCockpitUi;
+      var camundaCockpitUi = window['camunda/app/cockpit/camunda-cockpit-ui'];
 
-      requirejs.config({
-        baseUrl: '../../../lib'
+      window.__requirejs.config({
+        baseUrl: '../../lib'
       });
 
       var requirePackages = window;
@@ -63,10 +63,21 @@ window.__define(
 
       window.define = window.__define;
       window.require = window.__require;
+      window.requirejs = window.__requirejs;
 
-      requirejs(['globalize'], function(globalize) {
+      define('globalize', [], function() {
+        return function(r, m, p) {
+          for(var i = 0; i < m.length; i++) {
+            (function(i) {
+              define(m[i],function(){return p[m[i]];});
+            })(i);
+          }
+        }
+      });
+
+      window.__requirejs(['globalize'], function(globalize) {
         globalize(
-          requirejs,
+          window.__requirejs,
           [
             'angular',
             'camunda-commons-ui',
@@ -78,6 +89,7 @@ window.__define(
           ],
           requirePackages
         );
+
         var pluginPackages = window.PLUGIN_PACKAGES || [];
         var pluginDependencies = window.PLUGIN_DEPENDENCIES || [];
 
@@ -101,9 +113,9 @@ window.__define(
           document.head.appendChild(node);
         });
 
-        requirejs.config({
+        window.__requirejs.config({
           packages: pluginPackages,
-          baseUrl: '../',
+          baseUrl: './',
           paths: {
             ngDefine: '../../lib/ngDefine'
           }
@@ -115,7 +127,7 @@ window.__define(
           })
         );
 
-        requirejs(dependencies, function(jquery, angular) {
+        window.__requirejs(dependencies, function(jquery, angular) {
           // we now loaded the cockpit and the plugins, great
           // before we start initializing the cockpit though (and leave the requirejs context),
           // lets see if we should load some custom scripts first
@@ -257,10 +269,10 @@ window.__define(
 
           function loadRequireJsDeps() {
             // configure RequireJS
-            requirejs.config(conf);
+            window.__requirejs.config(conf);
 
             // load the dependencies and bootstrap the AngularJS application
-            requirejs(custom.deps || [], function() {
+            window.__requirejs(custom.deps || [], function() {
               // create a AngularJS module (with possible AngularJS module dependencies)
               // on which the custom scripts can register their
               // directives, controllers, services and all when loaded
@@ -287,4 +299,4 @@ window.__define(
   }
 );
 
-requirejs(['camunda-cockpit-bootstrap'], function() {});
+window.__requirejs(['camunda-cockpit-bootstrap'], function() {});
