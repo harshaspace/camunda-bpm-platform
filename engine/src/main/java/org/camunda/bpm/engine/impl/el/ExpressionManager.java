@@ -16,10 +16,13 @@
  */
 package org.camunda.bpm.engine.impl.el;
 
+import org.camunda.bpm.engine.impl.javax.el.FunctionMapper;
+
 /**
  * Original ExpressionManager class is renamed to {@link JuelExpressionManager}
  * to make el pluggable.
  */
 public interface ExpressionManager {
   Expression createExpression(String expression);
+  void addFunctionMapper(FunctionMapper functionMapper);
 }
