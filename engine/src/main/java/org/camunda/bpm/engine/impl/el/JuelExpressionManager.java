@@ -16,6 +16,7 @@
  */
 package org.camunda.bpm.engine.impl.el;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.camunda.bpm.engine.impl.javax.el.ListELResolver;
 import org.camunda.bpm.engine.impl.javax.el.MapELResolver;
 import org.camunda.bpm.engine.impl.javax.el.ValueExpression;
 import org.camunda.bpm.engine.impl.juel.ExpressionFactoryImpl;
+import org.camunda.bpm.engine.impl.util.EnsureUtil;
 import org.camunda.bpm.engine.test.mock.MockElResolver;
 import org.camunda.bpm.engine.variable.context.VariableContext;
 
@@ -46,7 +48,7 @@ import org.camunda.bpm.engine.variable.context.VariableContext;
  */
 public class JuelExpressionManager implements ExpressionManager, ElProviderCompatible {
 
-  protected List<FunctionMapper> functionMappers = new ArrayList<FunctionMapper>();
+  protected List<FunctionMapper> functionMappers = new ArrayList<>();
   protected ExpressionFactory expressionFactory;
   // Default implementation (does nothing)
   protected ELContext parsingElContext = new ProcessEngineElContext(functionMappers);
@@ -151,8 +153,19 @@ public class JuelExpressionManager implements ExpressionManager, ElProviderCompa
   /**
    * @param elFunctionMapper
    */
-  public void addFunctionMapper(FunctionMapper elFunctionMapper) {
-    this.functionMappers.add(elFunctionMapper);
+  @Override
+  public void addFunction(String name, Method function) {
+    EnsureUtil.ensureNotEmpty("name", name);
+    this.functionMappers.add(new FunctionMapper() {
+
+      @Override
+      public Method resolveFunction(String prefix, String localName) {
+        if (name.equals(localName)) {
+          return function;
+        }
+        return null;
+      }
+    });
   }
 
   @Override

@@ -19,8 +19,8 @@ package org.camunda.bpm.engine.test.api.cfg;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
-import org.camunda.bpm.engine.impl.el.CommandContextFunctionMapper;
-import org.camunda.bpm.engine.impl.el.DateTimeFunctionMapper;
+import org.camunda.bpm.engine.impl.el.CommandContextFunctions;
+import org.camunda.bpm.engine.impl.el.DateTimeFunctions;
 import org.camunda.bpm.engine.impl.javax.el.FunctionMapper;
 import org.junit.After;
 import org.junit.Assert;
@@ -46,19 +46,21 @@ public class CustomExpressionManagerTest {
     // when the engine is initialized
     engine = config.buildProcessEngine();
 
-    // then two default function mappers should be registered
+    // then four default functions should be registered
     Assert.assertSame(customExpressionManager, config.getExpressionManager());
-    Assert.assertEquals(2, customExpressionManager.getFunctionMappers().size());
+    Assert.assertEquals(4, customExpressionManager.getFunctionMappers().size());
 
     boolean commandContextMapperFound = false;
     boolean dateTimeMapperFound = false;
 
     for (FunctionMapper functionMapper : customExpressionManager.getFunctionMappers()) {
-      if (functionMapper instanceof CommandContextFunctionMapper) {
+      if (functionMapper.resolveFunction("", CommandContextFunctions.FUNCTION_CURRENT_USER) != null ||
+          functionMapper.resolveFunction("", CommandContextFunctions.FUNCTION_CURRENT_USERGROUPS) != null) {
         commandContextMapperFound = true;
       }
 
-      if (functionMapper instanceof DateTimeFunctionMapper) {
+      if (functionMapper.resolveFunction("", DateTimeFunctions.FUNCTION_NOW) != null ||
+          functionMapper.resolveFunction("", DateTimeFunctions.FUNCTION_DATETIME) != null) {
         dateTimeMapperFound = true;
       }
     }

@@ -160,8 +160,8 @@ import org.camunda.bpm.engine.impl.dmn.deployer.DecisionDefinitionDeployer;
 import org.camunda.bpm.engine.impl.dmn.deployer.DecisionRequirementsDefinitionDeployer;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionDefinitionManager;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionRequirementsDefinitionManager;
-import org.camunda.bpm.engine.impl.el.CommandContextFunctionMapper;
-import org.camunda.bpm.engine.impl.el.DateTimeFunctionMapper;
+import org.camunda.bpm.engine.impl.el.CommandContextFunctions;
+import org.camunda.bpm.engine.impl.el.DateTimeFunctions;
 import org.camunda.bpm.engine.impl.el.ElProviderCompatible;
 import org.camunda.bpm.engine.impl.el.ExpressionManager;
 import org.camunda.bpm.engine.impl.el.JuelExpressionManager;
@@ -2580,9 +2580,9 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     // for JuelExpressionManagers, we provide default function mappers
     if (expressionManager instanceof JuelExpressionManager) {
       // add function mapper for command context (eg currentUser(), currentUserGroups())
-      ((JuelExpressionManager)expressionManager).addFunctionMapper(new CommandContextFunctionMapper());
+      CommandContextFunctions.addFunctions(expressionManager);
       // add function mapper for date time (eg now(), dateTime())
-      ((JuelExpressionManager)expressionManager).addFunctionMapper(new DateTimeFunctionMapper());
+      DateTimeFunctions.addFunctions(expressionManager);
 
     }
   }

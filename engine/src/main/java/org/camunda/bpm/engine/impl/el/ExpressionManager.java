@@ -16,7 +16,7 @@
  */
 package org.camunda.bpm.engine.impl.el;
 
-import org.camunda.bpm.engine.impl.javax.el.FunctionMapper;
+import java.lang.reflect.Method;
 
 /**
  * Original ExpressionManager class is renamed to {@link JuelExpressionManager}
@@ -24,5 +24,5 @@ import org.camunda.bpm.engine.impl.javax.el.FunctionMapper;
  */
 public interface ExpressionManager {
   Expression createExpression(String expression);
-  void addFunctionMapper(FunctionMapper functionMapper);
+  void addFunction(String name, Method function);
 }

@@ -16,44 +16,23 @@
  */
 package org.camunda.bpm.engine.impl.el;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
-import org.camunda.bpm.engine.impl.javax.el.FunctionMapper;
 import org.camunda.bpm.engine.impl.util.ReflectUtil;
 
 /**
  * @author Sebastian Menski
  */
-public class CommandContextFunctionMapper extends FunctionMapper {
+public class CommandContextFunctions {
 
-  public static Map<String, Method> COMMAND_CONTEXT_FUNCTION_MAP = null;
+  public static final String FUNCTION_CURRENT_USER = "currentUser";
+  public static final String FUNCTION_CURRENT_USERGROUPS = "currentUserGroups";
 
-  public Method resolveFunction(String prefix, String localName) {
-    // Context functions are used un-prefixed
-    ensureContextFunctionMapInitialized();
-    return COMMAND_CONTEXT_FUNCTION_MAP.get(localName);
-  }
-
-  protected void ensureContextFunctionMapInitialized() {
-    if (COMMAND_CONTEXT_FUNCTION_MAP == null) {
-      synchronized (CommandContextFunctionMapper.class) {
-        if (COMMAND_CONTEXT_FUNCTION_MAP == null) {
-          COMMAND_CONTEXT_FUNCTION_MAP = new HashMap<String, Method>();
-          createMethodBindings();
-        }
-      }
-    }
-  }
-
-  protected void createMethodBindings() {
-    Class<?> mapperClass = getClass();
-    COMMAND_CONTEXT_FUNCTION_MAP.put("currentUser", ReflectUtil.getMethod(mapperClass, "currentUser"));
-    COMMAND_CONTEXT_FUNCTION_MAP.put("currentUserGroups", ReflectUtil.getMethod(mapperClass, "currentUserGroups"));
+  public static void addFunctions(ExpressionManager expressionManager) {
+    expressionManager.addFunction(FUNCTION_CURRENT_USER, ReflectUtil.getMethod(CommandContextFunctions.class, "currentUser"));
+    expressionManager.addFunction(FUNCTION_CURRENT_USERGROUPS, ReflectUtil.getMethod(CommandContextFunctions.class, "currentUserGroups"));
   }
 
   public static String currentUser() {

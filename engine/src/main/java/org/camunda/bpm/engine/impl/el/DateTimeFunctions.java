@@ -16,12 +16,7 @@
  */
 package org.camunda.bpm.engine.impl.el;
 
-import java.lang.reflect.Method;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.camunda.bpm.engine.impl.javax.el.FunctionMapper;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.impl.util.ReflectUtil;
 import org.joda.time.DateTime;
@@ -29,31 +24,14 @@ import org.joda.time.DateTime;
 /**
  * @author Sebastian Menski
  */
-public class DateTimeFunctionMapper extends FunctionMapper {
+public class DateTimeFunctions {
 
-  public static Map<String, Method> DATE_TIME_FUNCTION_MAP = null;
+  public static final String FUNCTION_NOW = "now";
+  public static final String FUNCTION_DATETIME = "dateTime";
 
-  public Method resolveFunction(String prefix, String localName) {
-    // Context functions are used un-prefixed
-    ensureContextFunctionMapInitialized();
-    return DATE_TIME_FUNCTION_MAP.get(localName);
-  }
-
-  protected void ensureContextFunctionMapInitialized() {
-    if (DATE_TIME_FUNCTION_MAP == null) {
-      synchronized (CommandContextFunctionMapper.class) {
-        if (DATE_TIME_FUNCTION_MAP == null) {
-          DATE_TIME_FUNCTION_MAP = new HashMap<String, Method>();
-          createMethodBindings();
-        }
-      }
-    }
-  }
-
-  protected void createMethodBindings() {
-    Class<?> mapperClass = getClass();
-    DATE_TIME_FUNCTION_MAP.put("now", ReflectUtil.getMethod(mapperClass, "now"));
-    DATE_TIME_FUNCTION_MAP.put("dateTime", ReflectUtil.getMethod(mapperClass, "dateTime"));
+  public static void addFunctions(ExpressionManager expressionManager) {
+    expressionManager.addFunction(FUNCTION_NOW, ReflectUtil.getMethod(DateTimeFunctions.class, "now"));
+    expressionManager.addFunction(FUNCTION_DATETIME, ReflectUtil.getMethod(DateTimeFunctions.class, "dateTime"));
   }
 
   public static Date now() {
