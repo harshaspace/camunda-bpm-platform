@@ -198,6 +198,7 @@ create table ACT_RU_TASK (
     DELEGATION_ nvarchar(64),
     PRIORITY_ int,
     CREATE_TIME_ datetime2,
+    LAST_UPDATED_ datetime2,
     DUE_DATE_ datetime2,
     FOLLOW_UP_DATE_ datetime2,
     SUSPENSION_STATE_ int,

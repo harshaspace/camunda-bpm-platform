@@ -5485,6 +5485,8 @@ public class TaskQueryTest extends PluggableProcessEngineTest {
     taskService.addCandidateGroup(task.getId(), "accountancy");
     ids.add(task.getId());
 
+    ClockUtil.reset();
+
     return ids;
   }
 
