@@ -464,7 +464,7 @@
             </if>
             <if test="query.updatedAfter != null">
               ${queryType} (RES.LAST_UPDATED_ &gt; #{query.updatedAfter}
-              OR RES.LAST_UPDATED_ IS NULL AND CREATE_TIME_ &gt; #{query.updatedAfter})
+              OR RES.LAST_UPDATED_ IS NULL AND RES.CREATE_TIME_ &gt; #{query.updatedAfter})
             </if>
             <if test="query.key != null">
               ${queryType} RES.TASK_DEF_KEY_ = #{query.key}

@@ -23,6 +23,8 @@ import org.camunda.bpm.engine.impl.util.ClockUtil;
 
 public class LastUpdatedTaskListener implements TaskListener{
 
+  public static final LastUpdatedTaskListener INSTANCE = new LastUpdatedTaskListener();
+
   @Override
   public void notify(DelegateTask delegateTask) {
     if(delegateTask instanceof TaskEntity) {

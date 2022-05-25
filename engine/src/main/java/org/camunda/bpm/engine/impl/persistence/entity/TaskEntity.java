@@ -67,6 +67,7 @@ import org.camunda.bpm.engine.impl.db.HasDbRevision;
 import org.camunda.bpm.engine.impl.db.entitymanager.DbEntityManager;
 import org.camunda.bpm.engine.impl.form.CamundaFormRefImpl;
 import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
+import org.camunda.bpm.engine.impl.history.parser.LastUpdatedTaskListener;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandContextListener;
 import org.camunda.bpm.engine.impl.interceptor.CommandInvocationContext;
@@ -93,6 +94,8 @@ import org.camunda.bpm.model.xml.type.ModelElementType;
  */
 public class TaskEntity extends AbstractVariableScope implements Task, DelegateTask, Serializable, DbEntity, HasDbRevision, HasDbReferences, CommandContextListener, VariablesProvider<VariableInstanceEntity> {
 
+  protected static final EnginePersistenceLogger LOG = ProcessEngineLogger.PERSISTENCE_LOGGER;
+
   protected static final List<VariableInstanceLifecycleListener<CoreVariableInstance>> DEFAULT_VARIABLE_LIFECYCLE_LISTENERS =
       Arrays.<VariableInstanceLifecycleListener<CoreVariableInstance>>asList(
           (VariableInstanceLifecycleListener) VariableInstanceEntityPersistenceListener.INSTANCE,
@@ -100,7 +103,10 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
           (VariableInstanceLifecycleListener) VariableInstanceHistoryListener.INSTANCE
           );
 
-  protected static final EnginePersistenceLogger LOG = ProcessEngineLogger.PERSISTENCE_LOGGER;
+  protected static final Map<String, List<TaskListener>> DEFAULT_STANDALONE_TASK_LISTENERS = new HashMap<>();
+  static{
+    DEFAULT_STANDALONE_TASK_LISTENERS.put(TaskListener.EVENTNAME_UPDATE, Arrays.asList(LastUpdatedTaskListener.INSTANCE));
+  }
 
   public static final String DELETE_REASON_COMPLETED = "completed";
   public static final String DELETE_REASON_DELETED   = "deleted";
@@ -1051,7 +1057,8 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
 
     }
     else {
-      return null;
+      // standalone tasks
+      return DEFAULT_STANDALONE_TASK_LISTENERS.get(event);
     }
   }
 

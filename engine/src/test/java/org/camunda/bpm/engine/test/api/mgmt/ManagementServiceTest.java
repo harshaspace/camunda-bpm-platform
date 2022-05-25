@@ -262,7 +262,7 @@ public class ManagementServiceTest extends PluggableProcessEngineTest {
   }
 
   protected List<String> getAllJobIds() {
-    ArrayList<String> result = new ArrayList<String>();
+    ArrayList<String> result = new ArrayList<>();
     for (Job job : managementService.createJobQuery().list()) {
       result.add(job.getId());
     }
@@ -798,7 +798,7 @@ public class ManagementServiceTest extends PluggableProcessEngineTest {
 
     TableMetaData tableMetaData = managementService.getTableMetaData("ACT_RU_TASK");
     assertEquals(tableMetaData.getColumnNames().size(), tableMetaData.getColumnTypes().size());
-    assertEquals(21, tableMetaData.getColumnNames().size());
+    assertEquals(22, tableMetaData.getColumnNames().size());
 
     int assigneeIndex = tableMetaData.getColumnNames().indexOf("ASSIGNEE_");
     int createTimeIndex = tableMetaData.getColumnNames().indexOf("CREATE_TIME_");
@@ -921,7 +921,7 @@ public class ManagementServiceTest extends PluggableProcessEngineTest {
   }
 
   private List<String> generateDummyTasks(int nrOfTasks) {
-    ArrayList<String> taskIds = new ArrayList<String>();
+    ArrayList<String> taskIds = new ArrayList<>();
     for (int i = 0; i < nrOfTasks; i++) {
       Task task = taskService.newTask();
       task.setName(((char) ('A' + i)) + "");

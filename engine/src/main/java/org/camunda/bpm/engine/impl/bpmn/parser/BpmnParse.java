@@ -2838,7 +2838,7 @@ public class BpmnParse extends Parse {
     // Activiti custom extension
     parseUserTaskCustomExtensions(taskElement, activity, taskDefinition);
 
-    taskDefinition.addBuiltInTaskListener(TaskListener.EVENTNAME_UPDATE, new LastUpdatedTaskListener());
+    taskDefinition.addBuiltInTaskListener(TaskListener.EVENTNAME_UPDATE, LastUpdatedTaskListener.INSTANCE);
 
     return taskDefinition;
   }

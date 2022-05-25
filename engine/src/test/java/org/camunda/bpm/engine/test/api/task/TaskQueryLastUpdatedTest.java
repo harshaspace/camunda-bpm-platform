@@ -32,6 +32,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
 import org.camunda.bpm.engine.test.util.ProvidedProcessEngineRule;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +50,17 @@ public class TaskQueryLastUpdatedTest {
   public void setUp() {
     taskService = engineRule.getTaskService();
     runtimeService = engineRule.getRuntimeService();
+  }
+
+  @After
+  public void tearDown() {
+    List<Task> tasks = taskService.createTaskQuery().list();
+    for (Task task : tasks) {
+      // standalone tasks (deployed process are cleaned up by the engine rule)
+      if(task.getProcessDefinitionId() == null) {
+        taskService.deleteTask(task.getId(), true);
+      }
+    }
   }
 
   // make sure that time passes between two fast operations
@@ -419,6 +431,26 @@ public class TaskQueryLastUpdatedTest {
   }
 
   @Test
+  @Deployment(resources = {"org/camunda/bpm/engine/test/api/form/DeployedCamundaFormSingleTaskProcess.bpmn20.xml",
+        "org/camunda/bpm/engine/test/api/form/task.html"})
+  public void shouldSetLastUpdatedOnSubmitTaskForm() {
+    // given
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("FormsProcess");
+    Task task = taskService.createTaskQuery().processInstanceId(processInstance.getId()).singleResult();
+    // delegate is necessary so that submitting the form does not complete the task
+    taskService.delegateTask(task.getId(), "myself");
+    Date beforeSubmit = getBeforeCurrentTime();
+
+    // when
+    engineRule.getFormService().submitTaskForm(task.getId(), null);
+
+    // then
+    Task taskResult = taskService.createTaskQuery().taskUpdatedAfter(beforeSubmit).singleResult();
+    assertThat(taskResult).isNotNull();
+    assertThat(taskResult.getLastUpdated()).isAfter(beforeSubmit);
+  }
+
+  @Test
   public void shouldReturnResultsOrderedAsc() {
     // given
     ProcessInstance processInstance1 = runtimeService.startProcessInstanceByKey("oneTaskProcess");
@@ -474,6 +506,42 @@ public class TaskQueryLastUpdatedTest {
     assertThat(tasks).hasSize(3);
     assertThat(tasks).extracting("id").containsExactly(task3.getId(), task1.getId(), task2.getId());
     assertThat(tasks).extracting("lastUpdated").isSortedAccordingTo(Collections.reverseOrder());
+  }
+
+  @Test
+  public void shouldFindStandaloneTaskWithoutUpdateByLastUpdated() {
+    // given
+    Date beforeCreateTask = getBeforeCurrentTime();
+    Task task = taskService.newTask();
+    task.setAssignee("myself");
+    Date beforeSave = getAfterCurrentTime();
+
+    // when
+    taskService.saveTask(task);
+
+    // then
+    Task taskResult = taskService.createTaskQuery().taskUpdatedAfter(beforeCreateTask).singleResult();
+    assertThat(taskResult).isNotNull();
+    assertThat(taskResult.getLastUpdated()).isNull();
+    assertThat(taskResult.getCreateTime()).isBefore(beforeSave);
+  }
+
+  @Test
+  public void shouldFindStandaloneTaskWithUpdateByLastUpdated() {
+    // given
+    Task task = taskService.newTask();
+    task.setAssignee("myself");
+    Date beforeSave = getAfterCurrentTime();
+    taskService.saveTask(task);
+
+    // when
+    taskService.setPriority(task.getId(), 2);
+
+    // then
+    Task taskResult = taskService.createTaskQuery().taskUpdatedAfter(beforeSave).singleResult();
+    assertThat(taskResult).isNotNull();
+    assertThat(taskResult.getLastUpdated()).isAfter(beforeSave);
+    assertThat(taskResult.getCreateTime()).isBefore(beforeSave);
   }
 
 }
