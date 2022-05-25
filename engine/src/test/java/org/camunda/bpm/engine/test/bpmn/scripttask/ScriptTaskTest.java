@@ -24,18 +24,23 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.ScriptCompilationException;
 import org.camunda.bpm.engine.ScriptEvaluationException;
 import org.camunda.bpm.engine.exception.NullValueException;
+import org.camunda.bpm.engine.history.HistoricActivityInstance;
 import org.camunda.bpm.engine.impl.util.CollectionUtil;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
+import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
+import org.camunda.bpm.engine.variable.Variables;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.junit.Test;
 
@@ -402,12 +407,23 @@ public class ScriptTaskTest extends AbstractScriptTaskTest {
 
   @Test
   public void testJuelExpression() {
-    deployProcess(JUEL, "${execution.setVariable('foo', 'bar')}");
+    deployProcess(Bpmn.createExecutableProcess("testProcess")
+      .startEvent()
+        .exclusiveGateway()
+          .condition("true", "${list.contains('foo')}")
+          .userTask("userTask")
+        .moveToLastGateway()
+          .condition("false", "${!list.contains('foo')}")
+          .endEvent()
+    .done());
 
-    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess");
+    ProcessInstance pi = runtimeService.startProcessInstanceByKey("testProcess",
+        Variables.createVariables().putValue("list", Arrays.asList("foo")));
 
-    String variableValue = (String) runtimeService.getVariable(pi.getId(), "foo");
-    assertEquals("bar", variableValue);
+    HistoricActivityInstance userTask = historyService.createHistoricActivityInstanceQuery()
+        .activityId("userTask")
+        .singleResult();
+    assertThat(userTask).isNotNull();
   }
 
   @Test

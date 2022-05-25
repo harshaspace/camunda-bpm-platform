@@ -95,7 +95,15 @@ public class BeanELResolver extends ELResolver {
 		}
 		try {
 			method.setAccessible(true);
-		} catch (SecurityException e) {
+		} catch (RuntimeException e) {
+			// From java 9 setAccessible throws SecurityException and InaccessibleObjectException.
+			// We have to catch both but InaccessibleObjectException is not available for java 8 yet,
+			// so we catch RuntimeException and rethrow the exception if it was something else than those two.
+			// If we don't support Java 8 anymore, we can get rid of this.
+			if (!(e instanceof SecurityException) && !e.getClass().getName().equals("java.lang.reflect.InaccessibleObjectException")) {
+				throw e;
+			}
+
 			for (Class<?> cls : method.getDeclaringClass().getInterfaces()) {
 				Method mth = null;
 				try {
